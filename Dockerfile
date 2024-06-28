@@ -14,19 +14,24 @@ RUN npm install
 COPY . .
 
 # Build the application
-RUN npm run build && npm run export
+RUN npm run build
 
-# Stage 2: Serve the application using nginx
-FROM nginx:alpine
+# Stage 2: Run the Next.js application
+FROM node:18
 
-# Copy the build files from the previous stage
-COPY --from=build /app/out /usr/share/nginx/html
+# Set working directory
+WORKDIR /app
 
-# Copy custom nginx configuration
-COPY defaultNginx.conf /etc/nginx/conf.d/default.conf
+# Copy only the necessary files from the build stage
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/next.config.js ./
+COPY --from=build /app/app ./app
 
-# Expose port 80
+# Expose port 3000
 EXPOSE 80
 
-# Start nginx server
-CMD ["nginx", "-g", "daemon off;"]
+# Start the Next.js server
+CMD ["npm", "run", "start"]
