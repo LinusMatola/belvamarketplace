@@ -1,5 +1,6 @@
 "use client"
 import Image from 'next/image'
+import Link from 'next/link';
 import React, { useState, useEffect } from 'react'
 
 function NavBar({ isHomePage }: any) {
@@ -48,7 +49,7 @@ function NavBar({ isHomePage }: any) {
                 <a href="#seller"
                     className={`font-normal ${isHomePage && !isScrolled ? 'text-white' : 'text-black'} hover:text-white transition duration-150 ease-in-out hover:bg-gray-800 p-2 px-4 rounded-full`}>Become a Seller</a>
                 <button className={`${isHomePage && !isScrolled ? 'bg-white text-black' : 'bg-[#262D32] text-white'} rounded-full py-2 px-6`}>Sign In</button>
-                <a href='/auth' className={`bg-transparent ${isHomePage && !isScrolled ? 'border-white text-white' : 'border-[#262D32] text-black'} rounded-full border-2 py-2 px-6`}>Join</a>
+                <Link href='/sign-up' className={`bg-transparent ${isHomePage && !isScrolled ? 'border-white text-white' : 'border-[#262D32] text-black'} rounded-full border-2 py-2 px-6`}>Join</Link>
             </div>
         </nav>
     );
