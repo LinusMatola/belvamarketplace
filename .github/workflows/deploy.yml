@@ -42,8 +42,17 @@ jobs:
       - name: Pull image from Docker Hub
         run: sudo docker pull linusmatola/startupbelva:latest
 
+      - name: Verify Docker image
+        run: sudo docker images
+
       - name: Delete Old Container
         run: sudo docker rm -f belvaContainer || true
 
       - name: Run Docker container
         run: sudo docker run -d -p 8060:80 --name belvaContainer linusmatola/startupbelva:latest
+
+      - name: Verify running containers
+        run: sudo docker ps -a
+
+      - name: Check container logs (if exists)
+        run: sudo docker logs belvaContainer || echo "No logs available, container might not exist."
