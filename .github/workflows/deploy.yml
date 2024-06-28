@@ -17,14 +17,18 @@ jobs:
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Docker Image
-        run: docker build -t linusmatola/startupbelva .
+        run: |
+          docker build -t linusmatola/startupbelva . || (
+            echo "Docker build failed. Check the logs above for details." &&
+            docker logs linusmatola/startupbelva &&
+            exit 1
+          )
 
       - name: Publish Image to Docker Hub
         run: docker push linusmatola/startupbelva:latest
 
   deploy:
     needs: build
-    # runs-on: aws-ec2
     runs-on: belva-runner
 
     steps:
@@ -47,4 +51,4 @@ jobs:
         run: sudo docker rm -f belvaContainer || true
 
       - name: Run Docker container
-        run: sudo docker run -d -p 5000:80 --name belvaContainer linusmatola/startupbelva:latest
+        run: sudo docker run -d -p 5050:80 --name belvaContainer linusmatola/startupbelva:latest
