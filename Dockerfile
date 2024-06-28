@@ -2,7 +2,7 @@
 FROM node:18 as build
 
 # Set working directory
-WORKDIR /prod
+WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
@@ -20,7 +20,7 @@ RUN npm run build
 FROM nginx:alpine
 
 # Copy the build files from the previous stage
-COPY --from=build /prod/build /usr/share/nginx/html
+COPY --from=build /app/build /usr/share/nginx/html
 
 # Copy custom nginx configuration
 COPY defaultNginx.conf /etc/nginx/conf.d/default.conf
