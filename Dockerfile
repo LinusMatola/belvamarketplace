@@ -19,7 +19,7 @@ RUN npm run build
 # Stage 2: Serve the application using nginx
 FROM nginx:alpine
 
-# Copy the build files from the previous stage if they exist, otherwise log an error
+# Copy the build files from the previous stage if they exist,
 RUN mkdir -p /usr/share/nginx/html && \
     if [ -d /app/build ]; then \
         cp -r /app/build/* /usr/share/nginx/html/; \
