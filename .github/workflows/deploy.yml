@@ -14,18 +14,21 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Login to Docker Hub
-        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
       - name: Build Docker Image
-        run: docker build -t linusmatola/startupbelva .
+        run: |
+          docker build -t linusmatola/startupbelva . || (
+            echo "Docker build failed. Check the logs above for details." &&
+            exit 1
+          )
 
       - name: Publish Image to Docker Hub
         run: docker push linusmatola/startupbelva:latest
 
   deploy:
     needs: build
-    # runs-on: aws-ec2
-    runs-on: belva-runner
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check sudo privileges
@@ -38,7 +41,7 @@ jobs:
         run: sudo service docker restart
 
       - name: Login to Docker Hub
-        run: sudo docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | sudo docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
       - name: Pull image from Docker Hub
         run: sudo docker pull linusmatola/startupbelva:latest
