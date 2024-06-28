@@ -1,5 +1,5 @@
 # Stage 1: Build the Next js application
-FROM node:14 as build
+FROM node:18 as build
 
 # Set working directory
 WORKDIR /prod
