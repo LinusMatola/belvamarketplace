@@ -1,5 +1,5 @@
-# Stage 1: Build the Next.js application
-FROM node:18 AS build
+# Stage 1: Build the React application
+FROM node:18 as build
 
 # Set working directory
 WORKDIR /app
@@ -16,22 +16,17 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Stage 2: Run the Next.js application
-FROM node:18
+# Stage 2: Serve the application using nginx
+FROM nginx:alpine
 
-# Set working directory
-WORKDIR /app
+# Copy the build files from the previous stage
+COPY --from=build /app/build /usr/share/nginx/html
 
-# Copy only the necessary files from the build stage
-COPY --from=build /app/package*.json ./
-COPY --from=build /app/.next ./.next
-COPY --from=build /app/public ./public
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/next.config.js ./
-COPY --from=build /app/app ./app
+# Copy custom nginx configuration
+COPY defaultNginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 3000
+# Expose port 80
 EXPOSE 80
 
-# Start the Next.js server
-CMD ["npm", "run", "start"]
+# Start nginx server
+CMD ["nginx", "-g", "daemon off;"]
