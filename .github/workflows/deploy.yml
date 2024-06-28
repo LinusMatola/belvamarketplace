@@ -24,7 +24,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: belva-runner
 
     steps:
       - name: Check sudo privileges
