@@ -47,4 +47,4 @@ jobs:
         run: sudo docker rm -f belvaContainer || true
 
       - name: Run Docker container
-        run: sudo docker run -d -p 8080:80 --name belvaContainer linusmatola/startupbelva:latest
+        run: sudo docker run -d -p 8088:80 --name belvaContainer linusmatola/startupbelva:latest
