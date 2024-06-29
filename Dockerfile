@@ -28,7 +28,7 @@ RUN mkdir -p /usr/share/nginx/html && \
     fi
 
 # Copy custom nginx configuration
-COPY defaultNginx.conf /etc/nginx/conf.d/default.conf
+#COPY defaultNginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80
 EXPOSE 80
