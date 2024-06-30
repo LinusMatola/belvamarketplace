@@ -1,7 +1,7 @@
 # Use the official Node.js image.
 # https://hub.docker.com/_/node
 
-# Stage 1: Build the React application
+# Stage 1: Build the Next.js application
 FROM node:18-alpine as build
 
 # Set working directory
@@ -23,20 +23,15 @@ RUN npm run build
 FROM nginx:alpine
 
 # Copy the build files from the previous stage
-COPY --from=build /app/build /usr/share/nginx/html
+COPY --from=build /app/.next /usr/share/nginx/html
+
+# Copy the public files
+COPY --from=build /app/public /usr/share/nginx/html
 
 #COPY defaultNginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80
 EXPOSE 80
-# Expose the port on which your Next.js app runs
-#EXPOSE 3000
 
 # Start nginx server
 CMD ["nginx", "-g", "daemon off;"]
-
-
-# Run the web service on container startup.
-#CMD [ "npm", "start" ]
-
-
