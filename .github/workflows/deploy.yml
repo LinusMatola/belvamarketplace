@@ -1,4 +1,4 @@
-name: React Deploy to EC2
+name: React Belva Deploy to EC2
 
 on:
   push:
