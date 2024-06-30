@@ -34,21 +34,10 @@ WORKDIR /app
 
 ENV NODE_ENV production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Copy the built output from the builder stage
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-
-USER nextjs
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
-
-#CMD HOSTNAME="0.0.0.0" node server.js
+CMD ["npx", "next", "start"]
