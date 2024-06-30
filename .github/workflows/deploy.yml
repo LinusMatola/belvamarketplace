@@ -1,4 +1,4 @@
-name: Next Deploy to EC2
+name: Deploy to EC2
 
 on:
   push:
@@ -7,52 +7,29 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
 
-      - name: Build Docker Image
-        run: docker build -t linusmatola/startupbelva .
-
-      - name: Publish Image to Docker Hub
-        run: docker push linusmatola/startupbelva:latest
+    - name: Build and push Docker image
+      run: |
+        docker build -t startupbelva:latest .
+        docker tag startupbelva:latest linusmatola/startupbelva:latest
+        docker push linusmatola/startupbelva:latest
 
   deploy:
     needs: build
     runs-on: belva-runner
 
     steps:
-      - name: Check sudo privileges
-        run: sudo whoami
-
-      - name: Add user to Docker group
-        run: sudo usermod -aG docker $USER
-
-      - name: Restart Docker service
-        run: sudo service docker restart
-
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | sudo docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-
-      - name: Pull image from Docker Hub
-        run: sudo docker pull linusmatola/startupbelva:latest
-
-      - name: Verify Docker image
-        run: sudo docker images
-
-      - name: Delete Old Container
-        run: sudo docker rm -f belvaContainer || true
-
-      - name: Run Docker container
-        run: sudo docker run -d -p 3000:3000 --name belvaContainer linusmatola/startupbelva:latest
-
-      - name: Verify running containers
-        run: sudo docker ps -a
-
-      - name: Check container logs (if exists)
-        run: sudo docker logs belvaContainer || echo "No logs available, container might not exist."
+    - name: SSH into EC2 and deploy Docker container
+      run: |
+        docker pull linusmatola/startupbelva:latest
+        docker stop startupbelva || true
+        docker rm startupbelva || true
+        docker run -d -p 80:3000 --name startupbelva linusmatola/startupbelva:latest
