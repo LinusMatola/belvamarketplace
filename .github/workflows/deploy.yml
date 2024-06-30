@@ -1,4 +1,4 @@
-name: Deploy Belva to EC2
+name: React Deploy to EC2
 
 on:
   push:
@@ -7,29 +7,44 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Build and push Docker image
-      run: |
-        docker build -t startupbelva:latest .
-        docker tag startupbelva:latest linusmatola/startupbelva:latest
-        docker push linusmatola/startupbelva:latest
+      - name: Build Docker Image
+        run: docker build -t linusmatola/startupbelva .
+
+      - name: Publish Image to Docker Hub
+        run: docker push linusmatola/startupbelva:latest
 
   deploy:
     needs: build
+    # runs-on: aws-ec2
     runs-on: belva-runner
 
     steps:
-    - name: SSH into EC2 and deploy Docker container
-      run: |
-        docker pull linusmatola/startupbelva:latest
-        docker stop startupbelva || true
-        docker rm startupbelva || true
-        docker run -d -p 80:3000 --name startupbelva linusmatola/startupbelva:latest
+      - name: Check sudo privileges
+        run: sudo whoami
+
+      - name: Add user to Docker group
+        run: sudo usermod -aG docker $USER
+
+      - name: Restart Docker service
+        run: sudo service docker restart
+
+      - name: Login to Docker Hub
+        run: sudo docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Pull image from Docker Hub
+        run: sudo docker pull linusmatola/startupbelva:latest
+
+      - name: Delete Old Container
+        run: sudo docker rm -f belvaContainer || true
+
+      - name: Run Docker container
+        run: sudo docker run -d -p 80:3000 --name belvaContainer linusmatola/startupbelva:latest
