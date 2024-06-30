@@ -25,6 +25,12 @@ WORKDIR /app
 # Copy the build files and node_modules from the build stage
 COPY --from=build /app ./
 
+# Install only production dependencies
+RUN npm install --only=production
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV CLERK_PUBLISHABLE_KEY=pk_test_cHJvbXB0LW1lZXJrYXQtOC5jbGVyay5hY2NvdW50cy5kZXYk
 # Expose port 3000
 EXPOSE 3000
 
