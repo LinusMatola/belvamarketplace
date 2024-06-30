@@ -28,9 +28,9 @@ COPY --from=build /app/build /usr/share/nginx/html
 #COPY defaultNginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80
-#EXPOSE 80
+EXPOSE 80
 # Expose the port on which your Next.js app runs
-EXPOSE 3000
+#EXPOSE 3000
 
 # Start nginx server
 CMD ["nginx", "-g", "daemon off;"]
