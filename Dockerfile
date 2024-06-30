@@ -1,38 +1,52 @@
-# Use the official Node.js image
-FROM node:18-alpine as build
+# Use node 18 as the base image for building and running the application
+FROM node:18-alpine AS base
 
-# Set working directory
+# Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+# Install dependencies based on the preferred package manager
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+RUN \
+  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+  elif [ -f package-lock.json ]; then npm ci; \
+  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
 
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the application code
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build the application
-RUN npm run build
+RUN \
+  if [ -f yarn.lock ]; then yarn run build; \
+  elif [ -f package-lock.json ]; then npm run build; \
+  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
 
-# Production stage
-FROM node:18-alpine as production
-
-# Set working directory
+# Production image, copy all the files and run next
+FROM base AS runner
 WORKDIR /app
 
-# Copy the build files and node_modules from the build stage
-COPY --from=build /app ./
+ENV NODE_ENV production
 
-# Install only production dependencies
-RUN npm install --only=production
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Set environment variables
-ENV NODE_ENV=production
-ENV CLERK_PUBLISHABLE_KEY=pk_test_cHJvbXB0LW1lZXJrYXQtOC5jbGVyay5hY2NvdW50cy5kZXYk
-# Expose port 3000
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Copy the built output from the builder stage
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+
+USER nextjs
+
 EXPOSE 3000
 
-# Start the Next.js application
-CMD ["npm", "start"]
+CMD HOSTNAME="0.0.0.0" node server.js
