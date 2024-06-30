@@ -1,7 +1,4 @@
-# Use the official Node.js image.
-# https://hub.docker.com/_/node
-
-# Stage 1: Build the Next.js application
+# Use the official Node.js image
 FROM node:18-alpine as build
 
 # Set working directory
@@ -19,19 +16,17 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Stage 2: Serve the application using nginx
-FROM nginx:alpine
+# Production stage
+FROM node:18-alpine as production
 
-# Copy the build files from the previous stage
-COPY --from=build /app/.next /usr/share/nginx/html
+# Set working directory
+WORKDIR /app
 
-# Copy the public files
-COPY --from=build /app/public /usr/share/nginx/html
+# Copy the build files and node_modules from the build stage
+COPY --from=build /app ./
 
-#COPY defaultNginx.conf /etc/nginx/conf.d/default.conf
+# Expose port 3000
+EXPOSE 3000
 
-# Expose port 80
-EXPOSE 80
-
-# Start nginx server
-CMD ["nginx", "-g", "daemon off;"]
+# Start the Next.js application
+CMD ["npm", "start"]
