@@ -23,7 +23,7 @@ RUN npm run build
 FROM nginx:alpine
 
 # Copy the build files from the previous stage
-#COPY --from=build /app/build /usr/share/nginx/html
+COPY --from=build /app/build /usr/share/nginx/html
 
 #COPY defaultNginx.conf /etc/nginx/conf.d/default.conf
 
@@ -33,10 +33,10 @@ FROM nginx:alpine
 EXPOSE 3000
 
 # Start nginx server
-#CMD ["nginx", "-g", "daemon off;"]
+CMD ["nginx", "-g", "daemon off;"]
 
 
 # Run the web service on container startup.
-CMD [ "npm", "start" ]
+#CMD [ "npm", "start" ]
 
 
