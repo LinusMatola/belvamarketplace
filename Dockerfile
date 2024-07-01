@@ -1,43 +1,25 @@
-# Use node 18 as the base image for building and running the application
-FROM node:18-alpine AS base
-
-# Install dependencies only when needed
-FROM base AS deps
-RUN apk add --no-cache libc6-compat
+# Dockerfile
+FROM node:18-alpine
+# Set the working directory
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
-RUN \
-  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+# Copy package.json and package-lock.json to the working directory
+COPY package*.json ./
 
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Install dependencies
+RUN npm install
+
+# Copy the entire project to the working directory
 COPY . .
 
-RUN \
-  if [ -f yarn.lock ]; then yarn run build; \
-  elif [ -f package-lock.json ]; then npm run build; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
-
-# Production image, copy all the files and run next
-FROM base AS runner
-WORKDIR /app
-
+# Build the Next.js application for production
+RUN npm run build
+# Set the environment variable to run the Next.js application in production mode
 ENV NODE_ENV production
+ENV PORT 80
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
+# Expose the port that the application will run on
+EXPOSE 80
 
-EXPOSE 3000
-
-CMD ["npx", "next", "start"]
+# Start the application
+CMD ["npm", "start"]
